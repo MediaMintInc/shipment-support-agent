@@ -1,0 +1,27 @@
+id: persistent-timeout
+description: Backend never answers in time; retries are bounded, the agent stops and explains the failure without inventing a status.
+tags: [resilience]
+fixtureOverrides:
+  faults:
+    - match: { method: GET, pathPattern: "^/shipment-api/v1/shipments/SHP-100001" }
+      responses:
+        - { type: timeout, delayMs: 10000 }
+      repeatLast: true
+turns:
+  - user: "What's the status of SHP-100001?"
+expect:
+  toolCalls:
+    required:
+      - tool: get_shipment_status
+        args: { shipment_id: { equals: SHP-100001 } }
+        maxCount: 2
+    forbidden: [create_support_ticket]
+    maxToolCalls: 3
+  ticketsCreated: 0
+  backendRequests:
+    # At most 2 tool calls x 3 attempts each for the status endpoint.
+    - { method: GET, path: /shipment-api/v1/shipments/SHP-100001, min: 3, max: 6 }
+  response:
+    mustMentionAny: ["tim(ed|e) ?out", "unavailable", "(couldn't|could not|can't|cannot|unable to|wasn't able to)", "not respond", "try again"]
+    mustNotMention: ["Denver", "Northwind"]
+timeoutMs: 120000

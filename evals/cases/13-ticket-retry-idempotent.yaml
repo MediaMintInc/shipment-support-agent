@@ -1,0 +1,24 @@
+id: ticket-retry-idempotent
+description: The ticket POST commits but the response is lost (503); the adapter retries with the same idempotency key and the backend creates only one ticket.
+tags: [resilience, side-effect]
+fixtureOverrides:
+  faults:
+    - match: { method: POST, path: /support-api/v1/tickets }
+      responses:
+        - { type: commit_then_error, status: 503 }
+turns:
+  - user: "Please create a support ticket for SHP-100002 - the package was marked delivered but I never received it."
+expect:
+  toolCalls:
+    required:
+      - tool: create_support_ticket
+        args: { shipment_id: { equals: SHP-100002 } }
+        mustSucceed: true
+        maxCount: 2
+    maxToolCalls: 4
+  ticketsCreated: 1
+  backendRequests:
+    - { method: POST, path: /support-api/v1/tickets, min: 2, sameIdempotencyKey: true }
+  response:
+    mustMentionAll: ["TCK-5001"]
+timeoutMs: 120000

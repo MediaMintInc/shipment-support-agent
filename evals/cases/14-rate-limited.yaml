@@ -1,0 +1,24 @@
+id: rate-limited-then-ok
+description: Backend rate-limits the first request (429, Retry-After 0); the adapter retries and the agent answers from real data.
+tags: [resilience]
+fixtureOverrides:
+  faults:
+    - match: { method: GET, path: /shipment-api/v1/shipments/SHP-100002 }
+      responses:
+        - { type: rate_limit, retryAfterSeconds: 0 }
+turns:
+  - user: "Has SHP-100002 been delivered?"
+expect:
+  toolCalls:
+    required:
+      - tool: get_shipment_status
+        args: { shipment_id: { equals: SHP-100002 } }
+        mustSucceed: true
+    forbidden: [create_support_ticket]
+    maxToolCalls: 3
+  ticketsCreated: 0
+  backendRequests:
+    - { method: GET, path: /shipment-api/v1/shipments/SHP-100002, min: 2, max: 2 }
+  response:
+    mustMentionAll: ["delivered"]
+timeoutMs: 90000

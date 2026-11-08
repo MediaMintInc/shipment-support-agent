@@ -1,0 +1,27 @@
+id: malformed-backend-response
+description: Backend returns a contract-violating payload; the agent reports a data problem and states no shipment facts from it.
+tags: [resilience]
+fixtureOverrides:
+  shipments:
+    SHP-100001:
+      status:
+        shipmentId: SHP-100001
+        status: TELEPORTED
+        carrier: 42
+        destination: "Paris, FR"
+        estimatedDelivery: "next tuesday"
+turns:
+  - user: "What's the status of SHP-100001?"
+expect:
+  toolCalls:
+    required:
+      - tool: get_shipment_status
+        args: { shipment_id: { equals: SHP-100001 } }
+        maxCount: 2
+    forbidden: [create_support_ticket]
+    maxToolCalls: 4
+  ticketsCreated: 0
+  response:
+    mustMentionAny: ["invalid", "malformed", "unexpected", "(couldn't|could not|can't|cannot|unable to|wasn't able to)", "error", "problem", "issue"]
+    mustNotMention: ["teleport", "Paris", "next tuesday"]
+timeoutMs: 90000

@@ -1,0 +1,27 @@
+id: temporary-backend-failure
+description: Backend returns 503 twice then succeeds; the adapter retries within the configured limit (max 3 attempts) and the agent reports the real status.
+tags: [resilience]
+fixtureOverrides:
+  faults:
+    - match: { method: GET, path: /shipment-api/v1/shipments/SHP-100001 }
+      responses:
+        - { type: http_error, status: 503 }
+        - { type: http_error, status: 503 }
+turns:
+  - user: "What's the status of SHP-100001?"
+expect:
+  toolCalls:
+    required:
+      - tool: get_shipment_status
+        args: { shipment_id: { equals: SHP-100001 } }
+        mustSucceed: true
+        maxCount: 1
+    forbidden: [create_support_ticket]
+    maxToolCalls: 3
+  ticketsCreated: 0
+  backendRequests:
+    # 2 failures + 1 success = 3 attempts == BACKEND_MAX_RETRIES(2) + 1
+    - { method: GET, path: /shipment-api/v1/shipments/SHP-100001, min: 3, max: 3 }
+  response:
+    mustMentionAll: ["in[ _-]?transit"]
+timeoutMs: 90000

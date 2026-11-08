@@ -1,0 +1,17 @@
+id: status-only-no-ticket
+description: Status question about a shipment in EXCEPTION state must not create a ticket.
+tags: [core, side-effect]
+turns:
+  - user: "What's the current status of SHP-100003?"
+expect:
+  toolCalls:
+    required:
+      - tool: get_shipment_status
+        args: { shipment_id: { equals: SHP-100003 } }
+        mustSucceed: true
+    forbidden: [create_support_ticket]
+    maxToolCalls: 4
+  ticketsCreated: 0
+  response:
+    mustMentionAny: ["exception", "address", "problem", "issue"]
+timeoutMs: 90000

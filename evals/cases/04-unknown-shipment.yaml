@@ -1,0 +1,23 @@
+id: unknown-shipment
+description: Unknown shipment ID; the agent explains it was not found and invents nothing.
+tags: [core, errors]
+turns:
+  - user: "What's the status of SHP-999999?"
+expect:
+  toolCalls:
+    required:
+      - tool: get_shipment_status
+        args: { shipment_id: { equals: SHP-999999 } }
+        maxCount: 2
+    forbidden: [create_support_ticket]
+    maxToolCalls: 3
+  ticketsCreated: 0
+  response:
+    mustMentionAny:
+      - "not (be )?found"
+      - "(couldn't|could not|can't|cannot|unable to) (find|locate)"
+      - "no (record|shipment|match)"
+      - "does(n't| not) exist"
+    mustNotMention:
+      - "Northwind|Bluebird"
+timeoutMs: 90000

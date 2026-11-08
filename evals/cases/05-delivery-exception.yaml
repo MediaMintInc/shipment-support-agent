@@ -1,0 +1,19 @@
+id: delivery-exception
+description: Delivery exception is described using only the returned exception data.
+tags: [core, read]
+turns:
+  - user: "Are there any delivery exceptions on SHP-100003?"
+expect:
+  toolCalls:
+    required:
+      - tool: get_delivery_exceptions
+        args: { shipment_id: { equals: SHP-100003 } }
+        mustSucceed: true
+        maxCount: 1
+    forbidden: [create_support_ticket]
+    maxToolCalls: 4
+  ticketsCreated: 0
+  response:
+    mustMentionAll: ["address", "apartment"]
+    mustMentionAny: ["open", "unresolved", "not (yet )?resolved"]
+timeoutMs: 90000

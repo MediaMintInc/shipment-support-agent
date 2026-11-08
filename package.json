@@ -1,0 +1,42 @@
+{
+  "name": "shipment-support-agent",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Strands TypeScript shipment support agent with two MCP servers, offline tests and real-LLM evaluations",
+  "type": "module",
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
+    "build": "npm run clean && tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.test.json",
+    "pretest": "npm run build",
+    "test": "vitest run",
+    "check": "npm run typecheck && npm test",
+    "mock": "node dist/mock/main.js",
+    "agent": "node dist/agent/cli.js",
+    "eval": "node dist/eval/cli.js",
+    "eval:list": "node dist/eval/cli.js --list",
+    "eval:repeat": "npm run build && node dist/eval/cli.js --repeat 5 --min-pass-rate 0.8",
+    "preeval": "npm run build",
+    "preagent": "npm run build",
+    "premock": "npm run build",
+    "report:sample": "npm run build && SAMPLE_REPORT_DIR=reports/sample-deterministic vitest run test/orchestration.deterministic.test.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.109.1",
+    "@modelcontextprotocol/client": "^2.4.0",
+    "@modelcontextprotocol/server": "^2.4.0",
+    "@strands-agents/sdk": "^1.24.0",
+    "openai": "^6.49.0",
+    "yaml": "^2.9.1",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.12"
+  }
+}

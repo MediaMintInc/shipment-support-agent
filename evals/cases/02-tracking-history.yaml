@@ -1,0 +1,18 @@
+id: tracking-history
+description: Tracking history lookup lists scan events from the tool result.
+tags: [core, read]
+turns:
+  - user: "Can you show me the tracking history for SHP-100001?"
+expect:
+  toolCalls:
+    required:
+      - tool: get_tracking_history
+        args: { shipment_id: { equals: SHP-100001 } }
+        mustSucceed: true
+        maxCount: 1
+    forbidden: [create_support_ticket]
+    maxToolCalls: 3
+  ticketsCreated: 0
+  response:
+    mustMentionAll: ["Austin", "Dallas", "Amarillo"]
+timeoutMs: 90000

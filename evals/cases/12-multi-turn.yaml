@@ -1,0 +1,36 @@
+id: multi-turn-context
+description: Shipment ID given in turn 1 is reused for follow-up questions and the explicit ticket request in turn 3.
+tags: [core, multi-turn, side-effect]
+turns:
+  - user: "Hi, what's the status of SHP-100003?"
+    expect:
+      toolCalls:
+        required:
+          - tool: get_shipment_status
+            args: { shipment_id: { equals: SHP-100003 } }
+        forbidden: [create_support_ticket]
+  - user: "Why is it stuck? Are there any delivery exceptions on it?"
+    expect:
+      toolCalls:
+        required:
+          - tool: get_delivery_exceptions
+            args: { shipment_id: { equals: SHP-100003 } }
+            mustSucceed: true
+        forbidden: [create_support_ticket]
+      response:
+        mustMentionAll: ["address"]
+  - user: "OK, please open a support ticket about it."
+    expect:
+      toolCalls:
+        required:
+          - tool: create_support_ticket
+            args: { shipment_id: { equals: SHP-100003 } }
+            mustSucceed: true
+            maxCount: 1
+      response:
+        mustMentionAll: ["TCK-5001"]
+expect:
+  toolCalls:
+    maxToolCalls: 8
+  ticketsCreated: 1
+timeoutMs: 180000

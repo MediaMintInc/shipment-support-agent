@@ -1,0 +1,25 @@
+id: explicit-ticket-request
+description: User explicitly asks to check exceptions and open a ticket if there is one; exactly one ticket is created after the exception check.
+tags: [core, side-effect]
+turns:
+  - user: "Please check SHP-100003 for delivery exceptions and, if there is one, open a support ticket about it."
+expect:
+  toolCalls:
+    required:
+      - tool: get_delivery_exceptions
+        args: { shipment_id: { equals: SHP-100003 } }
+        mustSucceed: true
+      - tool: create_support_ticket
+        args:
+          shipment_id: { equals: SHP-100003 }
+          user_explicitly_requested: { equals: true }
+        mustSucceed: true
+        maxCount: 1
+    # The ticket depends on the exception lookup, so ordering is required here.
+    ordering:
+      - [get_delivery_exceptions, create_support_ticket]
+    maxToolCalls: 4
+  ticketsCreated: 1
+  response:
+    mustMentionAll: ["TCK-5001"]
+timeoutMs: 120000

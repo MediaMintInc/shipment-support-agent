@@ -1,0 +1,22 @@
+id: status-lookup
+description: Valid shipment status lookup returns status, destination and ETA from tool data.
+tags: [core, read]
+turns:
+  - user: "What's the status of shipment SHP-100001?"
+expect:
+  toolCalls:
+    required:
+      - tool: get_shipment_status
+        args: { shipment_id: { equals: SHP-100001 } }
+        mustSucceed: true
+        maxCount: 1
+    forbidden: [create_support_ticket]
+    maxToolCalls: 3
+  ticketsCreated: 0
+  response:
+    mustMentionAll:
+      - "in[ _-]?transit"
+      - "Denver"
+      - "Nov(ember)?\\.? 10|2026-11-10|11/10"
+qualityRubric: "The reply states the current status, route and estimated delivery clearly and briefly."
+timeoutMs: 90000

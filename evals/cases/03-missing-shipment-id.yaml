@@ -1,0 +1,15 @@
+id: missing-shipment-id
+description: No shipment ID given; the agent must ask for it without calling any tool.
+tags: [core, clarification]
+turns:
+  - user: "Where is my package? It was supposed to arrive yesterday."
+expect:
+  toolCalls:
+    forbidden: [get_shipment_status, get_tracking_history, get_delivery_exceptions, create_support_ticket]
+    maxToolCalls: 0
+  ticketsCreated: 0
+  backendRequests:
+    - { max: 0 }
+  response:
+    mustMentionAny: ["shipment (id|number|identifier)", "tracking (id|number)", "SHP-"]
+timeoutMs: 60000

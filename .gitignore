@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.env
+reports/runs/
+*.log
+
+# graft's local graph cache — regenerable, not committed (run `graft build`).
+/graft/

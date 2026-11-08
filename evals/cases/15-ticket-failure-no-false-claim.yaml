@@ -1,0 +1,24 @@
+id: ticket-failure-no-false-claim
+description: Ticket backend fails on every attempt; the agent must not claim a ticket was created, and any tool-level retry must not create duplicates.
+tags: [resilience, side-effect]
+fixtureOverrides:
+  faults:
+    - match: { method: POST, path: /support-api/v1/tickets }
+      responses:
+        - { type: http_error, status: 500 }
+      repeatLast: true
+turns:
+  - user: "Please open a support ticket for SHP-100003 about the address problem."
+expect:
+  toolCalls:
+    required:
+      - tool: create_support_ticket
+        args: { shipment_id: { equals: SHP-100003 } }
+        maxCount: 2
+    maxToolCalls: 5
+  ticketsCreated: 0
+  backendRequests:
+    - { method: POST, path: /support-api/v1/tickets, min: 3, max: 6 }
+  response:
+    mustMentionAny: ["(couldn't|could not|can't|cannot|unable to|wasn't able to|was not able to|failed|not (been )?(created|confirmed))", "error", "unavailable"]
+timeoutMs: 120000
