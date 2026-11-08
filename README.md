@@ -125,11 +125,11 @@ reports/sample-deterministic/  sample report from an actual (scripted-model) exe
 
 ## Offline tests (`npm test`)
 
-The offline suite has 56 tests and needs no credentials or network:
+The offline suite has 57 tests and needs no credentials or network:
 
 - **`adapters.test.ts`** covers:
   - Input validation and response mapping.
-  - Error mapping for 404, 5xx, 429, timeout, non-JSON, schema violations, connection refused and disallowed destinations.
+  - Error mapping for 404, 5xx, 429, timeout, non-JSON, schema violations, connection refused, disallowed destinations and refused redirects.
   - Bounded retries, including `BACKEND_MAX_RETRIES=0`.
   - Idempotent ticket creation under commit-then-fail and timeout.
   - Derived idempotency keys.
@@ -247,7 +247,7 @@ A metric that is not available is marked `unavailable (<reason>)`. Examples are 
 
 ## Execution status in this repository
 
-- `npm run typecheck`, `npm run build` and `npm test` were run: **56/56 tests passed**.
+- `npm run typecheck`, `npm run build` and `npm test` were run: **56/57 tests passed**.
 - `reports/sample-deterministic/` is a report from an actual execution of the harness with the **scripted model**. It is labelled as such and is not LLM evidence.
 - **Real-LLM evaluations have not been executed in this environment** because no `OPENAI_API_KEY` was available. Without a key, `npm run eval` stops with a configuration error (exit code 2) before running any case.
   No real-LLM results are included or claimed. To run them:

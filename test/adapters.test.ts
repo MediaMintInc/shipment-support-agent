@@ -139,6 +139,34 @@ describe('ShipmentAdapter', () => {
     expect(mock.getRequests()).toHaveLength(0);
   });
 
+  it('refuses redirects instead of following them past the allow-list', async () => {
+    const { createServer } = await import('node:http');
+    let hitsOnTarget = 0;
+    const target = createServer((_req, res) => {
+      hitsOnTarget++;
+      res.end('{}');
+    });
+    await new Promise<void>((r) => target.listen(0, '127.0.0.1', () => r()));
+    const targetUrl = `http://127.0.0.1:${(target.address() as { port: number }).port}`;
+    const redirector = createServer((_req, res) => {
+      res.writeHead(302, { location: `${targetUrl}/v1/shipments/SHP-100001` });
+      res.end();
+    });
+    await new Promise<void>((r) => redirector.listen(0, '127.0.0.1', () => r()));
+    const redirectorUrl = `http://127.0.0.1:${(redirector.address() as { port: number }).port}`;
+    try {
+      const shipment = ShipmentAdapter.fromEnv(
+        readBackendEnv({ SHIPMENT_API_BASE_URL: redirectorUrl, BACKEND_ALLOWED_ORIGINS: redirectorUrl, BACKEND_RETRY_BASE_DELAY_MS: '1' }),
+      );
+      await expectBackendError(shipment.getStatus('SHP-100001'), 'DESTINATION_NOT_ALLOWED', 1);
+      expect(hitsOnTarget).toBe(0);
+    } finally {
+      target.closeAllConnections();
+      redirector.closeAllConnections();
+      await Promise.all([new Promise((r) => target.close(r)), new Promise((r) => redirector.close(r))]);
+    }
+  });
+
   it('maps connection failures to NETWORK_ERROR after retries', async () => {
     const http = new BackendHttpClient({ baseUrl: 'http://127.0.0.1:1', timeoutMs: 200, maxRetries: 1, retryBaseDelayMs: 1, retryMaxDelayMs: 1 });
     const { BackendExceptionsSchema } = await import('../src/backend/schemas.js');

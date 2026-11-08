@@ -118,6 +118,8 @@ export class BackendHttpClient {
           ...req.headers,
         },
         ...(req.body !== undefined ? { body: JSON.stringify(req.body) } : {}),
+        // Never follow redirects: a 3xx to another host would bypass the destination allow-list.
+        redirect: 'manual',
         signal: controller.signal,
       });
     } catch (err) {
@@ -160,6 +162,9 @@ export class BackendHttpClient {
 
   private statusError(res: Response, body: string): BackendError {
     const status = res.status;
+    if ((status >= 300 && status < 400) || res.type === 'opaqueredirect') {
+      return new BackendError(BackendErrorCode.DESTINATION_NOT_ALLOWED, `Backend responded with a redirect (HTTP ${status}); redirects are not followed`, { status });
+    }
     if (status === 404) return new BackendError(BackendErrorCode.NOT_FOUND, 'Resource not found', { status });
     if (status === 409) return new BackendError(BackendErrorCode.CONFLICT, 'Conflicting request', { status });
     if (status === 429) {
